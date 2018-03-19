@@ -10,6 +10,13 @@ const {Warehouse} = require('./../models/warehouse');
 const testDocs = [
     {
         _id: new ObjectID(),
+        productName: 'xxx yy',
+        amount: 5,
+        price: 10,
+        allowedToSell: false
+    },
+    {
+        _id: new ObjectID(),
         productName: 'ProductOne',
         amount: 1,
         price: 100,
@@ -112,7 +119,7 @@ describe('POST /warehouse', () => {
                     }
 
                     Warehouse.find().then(warehouse => {
-                        expect(warehouse.length).toBe(2);
+                        expect(warehouse.length).toBe(3);
                         done();
                     }).catch(err => done(err));
                 });
@@ -136,7 +143,7 @@ describe('POST /warehouse', () => {
                     }
 
                     Warehouse.find().then(warehouse => {
-                        expect(warehouse.length).toBe(2);
+                        expect(warehouse.length).toBe(3);
                         done();
                     }).catch(err => done(err));
                 });
@@ -160,7 +167,7 @@ describe('POST /warehouse', () => {
                     }
 
                     Warehouse.find().then(warehouse => {
-                        expect(warehouse.length).toBe(2);
+                        expect(warehouse.length).toBe(3);
                         done();
                     }).catch(err => done(err));
                 });
@@ -184,7 +191,7 @@ describe('POST /warehouse', () => {
                     }
 
                     Warehouse.find().then(warehouse => {
-                        expect(warehouse.length).toBe(2);
+                        expect(warehouse.length).toBe(3);
                         done();
                     }).catch(err => done(err));
                 });
@@ -208,7 +215,7 @@ describe('POST /warehouse', () => {
                     }
 
                     Warehouse.find().then(warehouse => {
-                        expect(warehouse.length).toBe(2);
+                        expect(warehouse.length).toBe(3);
                         done();
                     }).catch(err => done(err));
                 });
@@ -224,7 +231,7 @@ describe('GET /warehouse', () => {
             .get('/warehouse')
             .expect(200)
             .expect(res => {
-                expect(res.body.warehouse.length).toBe(2);
+                expect(res.body.warehouse.length).toBe(3);
             })
             .end(done);
     });
@@ -254,6 +261,39 @@ describe('GET /warehouse/:id', () => {
     it('should return 404 for invalid ObjectID given', done => {
         request(app)
             .get(`/warehouse/123`)
+            .expect(404)
+            .end(done);
+    });
+});
+
+describe('GET /warehouse/productName/:name', () => {
+    it('should return warehouse doc for productName matched', done => {
+        request(app)
+            .get(`/warehouse/productName/${testDocs[0].productName}`)
+            .expect(200)
+            .expect(res => {
+                expect(res.body.warehouse.productName).toBe(testDocs[0].productName);
+            })
+            .end(done);
+    });
+
+    it('should return 404 if given product name is empty', done => {
+        request(app)
+            .get(`/warehouse/productName/`)
+            .expect(404)
+            .end(done);
+    });
+
+    it('should return 404 if given product name contains only space characters', done => {
+        request(app)
+            .get(`/warehouse/productName/   `)
+            .expect(404)
+            .end(done);
+    });
+
+    it('should return 404 if no product in warehouse found with given name', done => {
+        request(app)
+            .get(`/warehouse/productName/nieMaTakiego`)
             .expect(404)
             .end(done);
     });

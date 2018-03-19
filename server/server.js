@@ -57,6 +57,23 @@ app.get('/warehouse/:id', (req, res) => {
     });
 });
 
+// route GET /warehouse/productName/:name do wyświetlania doc z warehouse o zadanej nazwie produktu
+app.get('/warehouse/productName/:name', (req, res) => {
+    const name = req.params.name;
+
+    console.log(name);
+
+    Warehouse.findOne({productName: name}).then(warehouse => {
+        if(!warehouse){
+            return res.status(404).send();
+        }
+        res.send({warehouse});
+    }).catch(err => {
+        res.status(400).send();
+    })
+    // return res.status(200).send();
+});
+
 if(!module.parent){
     app.listen(3000, () => {
         console.log('Server started on port 3000');
