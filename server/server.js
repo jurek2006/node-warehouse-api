@@ -8,6 +8,7 @@ const {mongoose} = require('./db/mongoose');
 const {Warehouse} = require('./models/warehouse');
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -71,12 +72,11 @@ app.get('/warehouse/productName/:name', (req, res) => {
     }).catch(err => {
         res.status(400).send();
     })
-    // return res.status(200).send();
 });
 
 if(!module.parent){
-    app.listen(3000, () => {
-        console.log('Server started on port 3000');
+    app.listen(port, () => {
+        console.log(`Server started on port ${port}`);
     });
 }
 
