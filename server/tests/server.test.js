@@ -2,18 +2,21 @@
 
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Warehouse} = require('./../models/warehouse');
 
 const testDocs = [
     {
+        _id: new ObjectID(),
         productName: 'ProductOne',
         amount: 1,
         price: 100,
         allowedToSell: true
     }, 
     {
+        _id: new ObjectID(),
         productName: 'ProductTwo',
         amount: 5,
         price: 10,
@@ -28,8 +31,8 @@ beforeEach(done => {
     }).then(() => done());
 });
 
-describe('POST /todos', () => {
-    describe('SUCCED - create a new warehouse item:', () => {
+describe('POST /warehouse', () => {
+    describe('SUCCEED - create a new warehouse item:', () => {
 
         it('should create a new warehouse item - with all the fields proper values given - and return it in response', done => {
             const docToAdd = {
@@ -213,4 +216,45 @@ describe('POST /todos', () => {
 
     });
 
+});
+
+describe('GET /warehouse', () => {
+    it('should get all docs from warehouse', done => {
+        request(app)
+            .get('/warehouse')
+            .expect(200)
+            .expect(res => {
+                expect(res.body.warehouse.length).toBe(2);
+            })
+            .end(done);
+    });
+});
+
+describe('GET /warehouse/:id', () => {
+    it('should get warehouse doc with matching id', done => {
+        request(app)
+            .get(`/warehouse/${testDocs[0]._id.toHexString()}`)
+            .expect(200)
+            .expect(res => {
+                expect(res.body.warehouse.productName).toBe(testDocs[0].productName);
+                expect(res.body.warehouse.amount).toBe(testDocs[0].amount);
+                expect(res.body.warehouse.price).toBe(testDocs[0].price);
+                expect(res.body.warehouse.allowedToSell).toBe(testDocs[0].allowedToSell);
+            })
+            .end(done);
+    });
+
+    it('should return 404 if warehouse doc not found for valid ObjectID given', done => {
+        request(app)
+            .get(`/warehouse/${new ObjectID().toHexString()}`)
+            .expect(404)
+            .end(done);
+    });
+
+    it('should return 404 for invalid ObjectID given', done => {
+        request(app)
+            .get(`/warehouse/123`)
+            .expect(404)
+            .end(done);
+    });
 });

@@ -2,6 +2,7 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 const {mongoose} = require('./db/mongoose');
 const {Warehouse} = require('./models/warehouse');
@@ -12,7 +13,6 @@ app.use(bodyParser.json());
 
 // route POST /warehouse do dodawania danych do warehouse
 app.post('/warehouse', (req, res) => {
-    // console.log(req.body);
 
     const warehouse = new Warehouse({
         productName: req.body.productName,
@@ -28,6 +28,33 @@ app.post('/warehouse', (req, res) => {
         .catch(err => {
             res.status(400).send(err);
         })
+});
+
+// route GET /warehouse do wyświetlania wszystkich danych z warehouse
+app.get('/warehouse', (req, res) => {
+    Warehouse.find().then(warehouse => {
+        res.send({warehouse});
+    }, err => {
+        res.status(400).send(err);
+    });
+});
+
+// route GET /warehouse/:id do wyświetlenia doc z warehouse o zadanym id
+app.get('/warehouse/:id', (req, res) => {
+    const id = req.params.id;
+
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+
+    Warehouse.findById(id).then(warehouse => {
+        if(!warehouse){
+            return res.status(404).send();
+        }
+        res.send({warehouse});
+    }).catch(err => {
+        res.status(400).send();
+    });
 });
 
 if(!module.parent){
