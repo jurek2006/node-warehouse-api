@@ -1,6 +1,7 @@
 // server/server.js
 require('./config/config'); //ustawienia portu i połączenia z bazą danych
 
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
@@ -87,6 +88,33 @@ app.delete('/warehouse/:id', (req, res) => {
         }
         res.send({deleted: warehouse})
     }).catch(err => res.status(400).send());
+});
+
+// route PATCH /warehouse/:id do edycji doc o zadanym id
+app.patch('/warehouse/:id', (req, res) => {
+    const id = req.params.id;
+
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send({message: 'Invalid id given. Unable to update'});
+    }
+
+    // ignorowanie właściwości, które nie są odpowiedniego typu
+    // + ignorowanie prób zmiany _id
+    const propertiesToOmit = ['_id'];
+
+    if(!_.isString(req.body.productName)){ propertiesToOmit.push('productName'); }
+    if(!_.isFinite(req.body.amount)){ propertiesToOmit.push('amount') }
+    if(!_.isFinite(req.body.price)){ propertiesToOmit.push('price') }
+    if(!_.isBoolean(req.body.allowedToSell)){ propertiesToOmit.push('allowedToSell') }
+
+    const body = _.omit(req.body, propertiesToOmit);
+
+    Warehouse.findByIdAndUpdate(id, {$set: body}, {new: true}).then(updated => {
+        if(!updated){
+            return res.status(404).send({message: 'None doc with given id found. Unable to update'});
+        }
+        res.send({updated});
+    }).catch(err => res.status(400).send({err}) );
 });
 
 if(!module.parent){

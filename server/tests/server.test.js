@@ -300,9 +300,9 @@ describe('GET /warehouse/productName/:name', () => {
 });
 
 describe('DELETE /warehouse/:id', () => {
-    const idOfElemToDelete = testDocs[1]._id.toHexString();
-
+    
     it('should remove doc with given id', done => {
+        const idOfElemToDelete = testDocs[1]._id.toHexString();
         request(app)
             .delete(`/warehouse/${idOfElemToDelete}`)
             .expect(200)
@@ -340,4 +340,227 @@ describe('DELETE /warehouse/:id', () => {
             })
             .end(done);
     });
+});
+
+describe('PATCH /warehouse/:id', () => {
+
+    const docToUpdate = {
+        productName: 'UpdatedTest',
+        amount: 555,
+        price: 999,
+        allowedToSell: true
+    }
+
+    it('should update doc with given id', done => {
+        const idOfElemToUpdate = testDocs[0]._id.toHexString();
+
+        request(app)
+            .patch(`/warehouse/${idOfElemToUpdate}`)
+            .send(docToUpdate)
+            .expect(200)
+            .expect(res => {
+                
+                expect(res.body.updated._id).toBe(idOfElemToUpdate);
+                expect(res.body.updated.productName).toBe(docToUpdate.productName);
+                expect(res.body.updated.amount).toBe(docToUpdate.amount);
+                expect(res.body.updated.price).toBe(docToUpdate.price);
+                expect(res.body.updated.allowedToSell).toBe(docToUpdate.allowedToSell);
+            })
+            .end((err, response) => {
+                if(err){
+                    return done(err);
+                }
+
+                Warehouse.findById(idOfElemToUpdate).then(updatedElement => {
+                    expect(updatedElement._id.toHexString()).toBe(idOfElemToUpdate);
+                    expect(updatedElement.productName).toBe(docToUpdate.productName);
+                    expect(updatedElement.amount).toBe(docToUpdate.amount);
+                    expect(updatedElement.price).toBe(docToUpdate.price);
+                    expect(updatedElement.allowedToSell).toBe(docToUpdate.allowedToSell);
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should update doc with given id but only properties: productName, amount, price, allowedToSell', done => {
+        const idOfElemToUpdate = testDocs[1]._id.toHexString();
+        const docToUpdate = {
+            productName: 'UpdatedTestNew',
+            amount: 333,
+            price: 111,
+            allowedToSell: false,
+            nonExisting: true,
+            amountOfNothing: 1111
+        }
+
+        request(app)
+            .patch(`/warehouse/${idOfElemToUpdate}`)
+            .send(docToUpdate)
+            .expect(200)
+            .expect(res => {
+                
+                expect(res.body.updated._id).toBe(idOfElemToUpdate);
+                expect(res.body.updated.productName).toBe(docToUpdate.productName);
+                expect(res.body.updated.amount).toBe(docToUpdate.amount);
+                expect(res.body.updated.price).toBe(docToUpdate.price);
+                expect(res.body.updated.allowedToSell).toBe(docToUpdate.allowedToSell);
+                expect(res.body.updated.nonExisting).toNotExist();
+                expect(res.body.updated.amountOfNothing).toNotExist();
+            })
+            .end((err, response) => {
+                if(err){
+                    return done(err);
+                }
+
+                Warehouse.findById(idOfElemToUpdate).then(updatedElement => {
+                    expect(updatedElement._id.toHexString()).toBe(idOfElemToUpdate);
+                    expect(updatedElement.productName).toBe(docToUpdate.productName);
+                    expect(updatedElement.amount).toBe(docToUpdate.amount);
+                    expect(updatedElement.price).toBe(docToUpdate.price);
+                    expect(updatedElement.nonExisting).toNotExist();
+                    expect(updatedElement.amountOfNothing).toNotExist();
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should update only productName in doc as amount, price & allowedToSell have invalid type', done => {
+        const idOfElemToUpdate = testDocs[1]._id.toHexString();
+
+        const docBeforeUpdate = testDocs[1];
+
+        const docToUpdate = {
+            productName: 'UpdatedTestVeryNew',
+            amount: 'sto',
+            price: 'dwiescie',
+            allowedToSell: 100,
+        }
+
+        request(app)
+            .patch(`/warehouse/${idOfElemToUpdate}`)
+            .send(docToUpdate)
+            .expect(200)
+            .expect(res => {
+                
+                expect(res.body.updated._id).toBe(idOfElemToUpdate);
+                expect(res.body.updated.productName).toBe(docToUpdate.productName);
+                expect(res.body.updated.amount).toBe(docBeforeUpdate.amount);
+                expect(res.body.updated.price).toBe(docBeforeUpdate.price);
+                expect(res.body.updated.allowedToSell).toBe(docBeforeUpdate.allowedToSell);
+            })
+            .end((err, response) => {
+                if(err){
+                    return done(err);
+                }
+
+                Warehouse.findById(idOfElemToUpdate).then(updatedElement => {
+                    expect(updatedElement._id.toHexString()).toBe(idOfElemToUpdate);
+                    expect(updatedElement.productName).toBe(docToUpdate.productName);
+                    expect(updatedElement.amount).toBe(docBeforeUpdate.amount);
+                    expect(updatedElement.price).toBe(docBeforeUpdate.price);
+                    expect(updatedElement.allowedToSell).toBe(docBeforeUpdate.allowedToSell);
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should update only amount, price & allowedToSell and omit productName as it has invalid type given', done => {
+        const idOfElemToUpdate = testDocs[1]._id.toHexString();
+
+        const docBeforeUpdate = testDocs[1];
+
+        const docToUpdate = {
+            productName: 999,
+            amount: 100,
+            price: 2.59,
+            allowedToSell: false,
+        }
+
+        request(app)
+            .patch(`/warehouse/${idOfElemToUpdate}`)
+            .send(docToUpdate)
+            .expect(200)
+            .expect(res => {
+                
+                expect(res.body.updated._id).toBe(idOfElemToUpdate);
+                expect(res.body.updated.productName).toBe(docBeforeUpdate.productName);
+                expect(res.body.updated.amount).toBe(docToUpdate.amount);
+                expect(res.body.updated.price).toBe(docToUpdate.price);
+                expect(res.body.updated.allowedToSell).toBe(docToUpdate.allowedToSell);
+            })
+            .end((err, response) => {
+                if(err){
+                    return done(err);
+                }
+
+                Warehouse.findById(idOfElemToUpdate).then(updatedElement => {
+                    expect(updatedElement._id.toHexString()).toBe(idOfElemToUpdate);
+                    expect(updatedElement.productName).toBe(docBeforeUpdate.productName);
+                    expect(updatedElement.amount).toBe(docToUpdate.amount);
+                    expect(updatedElement.price).toBe(docToUpdate.price);
+                    expect(updatedElement.allowedToSell).toBe(docToUpdate.allowedToSell);
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should update doc but not _id', done => {
+        const idOfElemToUpdate = testDocs[1]._id.toHexString();
+
+        const docBeforeUpdate = testDocs[1];
+
+        const docToUpdate = {
+            _id: new ObjectID().toHexString(),
+            productName: 'just a name',
+            amount: 100,
+            price: 2.59,
+            allowedToSell: false,
+        }
+
+        request(app)
+            .patch(`/warehouse/${idOfElemToUpdate}`)
+            .send(docToUpdate)
+            .expect(200)
+            .expect(res => {
+                
+                expect(res.body.updated._id).toBe(idOfElemToUpdate);
+                expect(res.body.updated.productName).toBe(docToUpdate.productName);
+                expect(res.body.updated.amount).toBe(docToUpdate.amount);
+                expect(res.body.updated.price).toBe(docToUpdate.price);
+                expect(res.body.updated.allowedToSell).toBe(docToUpdate.allowedToSell);
+            })
+            .end((err, response) => {
+                if(err){
+                    return done(err);
+                }
+
+                Warehouse.findById(docToUpdate._id).then(updatedElement => {
+                    expect(updatedElement).toNotExist();
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should return 404 and messageText when no doc with given valid id found', done => {
+        request(app)
+            .patch(`/warehouse/${new ObjectID().toHexString()}`)
+            .send(docToUpdate)
+            .expect(404)
+            .expect(res => {
+                expect(res.body.message).toBe('None doc with given id found. Unable to update');
+            })
+            .end(done);
+    });
+
+    it('should return 404 and messageText when invalid id given', done => {
+        request(app)
+            .patch('/warehouse/1234')
+            .send(docToUpdate)
+            .expect(404)
+            .expect(res => {
+                expect(res.body.message).toBe('Invalid id given. Unable to update');
+            })
+            .end(done);
+    });
+
 });
