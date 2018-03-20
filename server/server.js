@@ -1,4 +1,5 @@
 // server/server.js
+require('./config/config'); //ustawienia portu i połączenia z bazą danych
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -61,8 +62,6 @@ app.get('/warehouse/:id', (req, res) => {
 // route GET /warehouse/productName/:name do wyświetlania doc z warehouse o zadanej nazwie produktu
 app.get('/warehouse/productName/:name', (req, res) => {
     const name = req.params.name;
-
-    console.log(name);
 
     Warehouse.findOne({productName: name}).then(warehouse => {
         if(!warehouse){
