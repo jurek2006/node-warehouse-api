@@ -73,6 +73,22 @@ app.get('/warehouse/productName/:name', (req, res) => {
     })
 });
 
+// route DELETE /warehouse/:id do usuwania doc o zadanym id
+app.delete('/warehouse/:id', (req, res) => {
+    const id = req.params.id;
+
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send({message: 'Invalid id given. Unable to delete'});
+    }
+
+    Warehouse.findByIdAndRemove(id).then(warehouse => {
+        if(!warehouse){
+            return res.status(404).send({message: 'None doc with given id found. Unable to delete'});
+        }
+        res.send({deleted: warehouse})
+    }).catch(err => res.status(400).send());
+});
+
 if(!module.parent){
     app.listen(port, () => {
         console.log(`Server started on port ${port}`);

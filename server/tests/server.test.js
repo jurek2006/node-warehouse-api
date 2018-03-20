@@ -298,3 +298,46 @@ describe('GET /warehouse/productName/:name', () => {
             .end(done);
     });
 });
+
+describe('DELETE /warehouse/:id', () => {
+    const idOfElemToDelete = testDocs[1]._id.toHexString();
+
+    it('should remove doc with given id', done => {
+        request(app)
+            .delete(`/warehouse/${idOfElemToDelete}`)
+            .expect(200)
+            .expect(res => {
+                expect(res.body.deleted._id).toBe(idOfElemToDelete);
+            })
+            .end((err, response) => {
+                if(err){
+                    return done(err);
+                }
+
+                Warehouse.findById(idOfElemToDelete).then(warehouse => {
+                    expect(warehouse).toNotExist();
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should return 404 and messageText when given id is invalid', done => {
+        request(app)
+            .delete('/warehouse/1234')
+            .expect(404)
+            .expect(res => {
+                expect(res.body.message).toBe('Invalid id given. Unable to delete');
+            })
+            .end(done);
+    });
+
+    it('should return 404 and messageText when no doc with given valid id found', done => {
+        request(app)
+            .delete(`/warehouse/${new ObjectID().toHexString()}`)
+            .expect(404)
+            .expect(res => {
+                expect(res.body.message).toBe('None doc with given id found. Unable to delete');
+            })
+            .end(done);
+    });
+});
